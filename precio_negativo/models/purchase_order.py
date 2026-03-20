@@ -21,8 +21,12 @@ class PurchaseOrderLine(models.Model):
             if line.price_unit == 0:
                 if not line._skip_zero_validation_for_alternative_creation() and line.order_id.state not in ['draft', 'sent']:
                     raise ValidationError("No se permiten precios unitarios en 0 en las órdenes de compra.")
-            # Permitir cantidades en 0 si es comparación de alternativas
-            if line.product_qty == 0 and not line._skip_zero_validation_for_alternative_creation():
+            # En borrador/enviada se permite 0 para no romper el flujo de alternativas.
+            if (
+                line.product_qty == 0
+                and not line._skip_zero_validation_for_alternative_creation()
+                and line.order_id.state not in ['draft', 'sent']
+            ):
                 raise ValidationError("No se permiten cantidades en 0 en las órdenes de compra.")
 
 class PurchaseOrder(models.Model):
