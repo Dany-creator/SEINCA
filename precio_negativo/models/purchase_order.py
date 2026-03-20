@@ -4,6 +4,14 @@ from odoo.exceptions import ValidationError
 class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
 
+    def action_choose(self):
+        # Fuerza contexto de comparación para evitar bloqueos por validaciones de cero
+        # durante la selección de alternativas de compra.
+        return super(
+            PurchaseOrderLine,
+            self.with_context(compare_alternatives=True, origin_po_id=self.order_id.id),
+        ).action_choose()
+
     @api.constrains('price_unit', 'product_qty')
     def _check_negative_values(self):
         for line in self:
