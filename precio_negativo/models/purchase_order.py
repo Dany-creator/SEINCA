@@ -5,8 +5,11 @@ class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
 
     def _skip_zero_validation_for_alternative_creation(self):
-        """Skip zero checks only while an alternative PO is being created."""
-        return bool(self.env.context.get('origin_po_id'))
+        """
+        Skip zero checks only while una alternativa está siendo creada o comparada.
+        Permite cantidades en 0 si el contexto indica que es una comparación de alternativas.
+        """
+        return bool(self.env.context.get('origin_po_id') or self.env.context.get('compare_alternatives'))
 
     @api.constrains('price_unit', 'product_qty')
     def _check_negative_values(self):
@@ -18,6 +21,7 @@ class PurchaseOrderLine(models.Model):
             if line.price_unit == 0:
                 if not line._skip_zero_validation_for_alternative_creation() and line.order_id.state not in ['draft', 'sent']:
                     raise ValidationError("No se permiten precios unitarios en 0 en las órdenes de compra.")
+            # Permitir cantidades en 0 si es comparación de alternativas
             if line.product_qty == 0 and not line._skip_zero_validation_for_alternative_creation():
                 raise ValidationError("No se permiten cantidades en 0 en las órdenes de compra.")
 
